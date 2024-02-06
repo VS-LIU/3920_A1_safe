@@ -75,41 +75,26 @@ app.post('/submitEmail', (req,res) => {
 const headerContent = fs.readFileSync('./views/partials/header2.ejs', 'utf8');
 const footerContent = fs.readFileSync('views/partials/footer.ejs', 'utf8');
 app.get('/findUser', (req, res) => {
-    res.render("findUser");
+    res.render("findUser", { user: null});
 });
 app.post('/processForm', async (req, res) => {
     var name = req.body.name;
     try {
-        const query = "SELECT * FROM user WHERE username = ?";
+        // const query = `SELECT * FROM user WHERE username = '${name}'`;
+        // console.log("query: ", query);
+        // const [rows, fields] = await database.query(query);
+        // console.log("rows: ", rows);
+
+        const query = `SELECT * FROM user WHERE username = :username`; // Named Placeholder
         console.log("query: ", query);
-        const [rows, fields] = await database.query(query, [name]);
+        const [rows, fields] = await database.query(query, { username: name }); // Passing parameters as an object with named placeholders
         console.log("rows: ", rows);
- 
         if (rows.length > 0) {
             // If user found, send user details
-            res.send(`
-            ${headerContent}
-                <form action='/processForm' method='post'>
-                    Search for a user: <input name='name' type='text' placeholder='Name'>
-                    <button>Submit</button>
-                </form>
-                <p>User found: ${rows[0].username}</p>
-                Details:
-                <ul>
-                    <li>...</li>
-                    <li>...</li>
-                ${footerContent}
-            `);
+            res.render("findUserResult", { user: rows[0] });
         } else {
-            res.send(`
-            ${headerContent}
-                <form action='/processForm' method='post'>
-                    Search for a user: <input name='name' type='text' placeholder='Name'>
-                    <button>Submit</button>
-                </form>
-                <p>User ${name} not found</p>
-                ${footerContent}
-            `);
+            console.log(rows[0]);
+            res.render("findUserResult", { user: name });
         }
     } catch (error) {
         console.error("Error fetching user from database:", error);
